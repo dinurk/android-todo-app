@@ -1,7 +1,6 @@
 package com.example.myapplication1
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -19,9 +18,7 @@ import com.example.myapplication1.ui.stateholders.TasksViewModel
 import com.example.myapplication1.ui.view.DefaultControlsFragment
 import com.example.myapplication1.ui.view.SelectManyFragment
 import com.example.myapplication1.ui.view.TasksAdapter
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.util.UUID
 import javax.inject.Inject
 
@@ -61,19 +58,16 @@ class MainActivity : AppCompatActivity(), TasksAdapter.TaskSelectHandler {
         /** Подключаем DI */
         (this.application as MyApplication).appComponent.inject(this)
 
-        lifecycleScope.launch(Dispatchers.IO) {
+        /** Подписка на изменения списка задач */
+        lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 tasksViewModel.tasks().collect {
-                    Log.d("List info", it.toString())
-                    Log.d("Thread info", Thread.currentThread().name)
-                    withContext(Dispatchers.Main) {
-                        tasksAdapter.setData(it)
-                        Log.d("Thread info", Thread.currentThread().name)
-                    }
+                    tasksAdapter.setData(it)
                 }
             }
         }
 
+        /** Подписка за изменение количества выделенных задач */
         lifecycleScope.launch {
             tasksViewModel.selectedCount().collect { selectedCount ->
                 if (selectedCount > 0) {

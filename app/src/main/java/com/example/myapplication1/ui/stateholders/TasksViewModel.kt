@@ -1,19 +1,16 @@
 package com.example.myapplication1.ui.stateholders
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.myapplication1.data.model.Task
 import com.example.myapplication1.data.repository.TasksRepository
 import com.example.myapplication1.ui.model.TaskForView
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.UUID
-import javax.inject.Inject
 
 class TasksViewModel(private val tasksRepository: TasksRepository) : ViewModel() {
 
@@ -29,14 +26,6 @@ class TasksViewModel(private val tasksRepository: TasksRepository) : ViewModel()
                 }
             }
     }
-
-//    class Factory @Inject constructor(private val tasksRepository: TasksRepository) :
-//        ViewModelProvider.Factory {
-//        @Suppress("UNCHECKED_CAST")
-//        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-//            return TasksViewModel(tasksRepository) as T
-//        }
-//    }
 
     /** Список задач */
     private val tasks = MutableStateFlow<List<TaskForView>>(emptyList())
@@ -64,24 +53,23 @@ class TasksViewModel(private val tasksRepository: TasksRepository) : ViewModel()
 
     /** Обновить список задач из репозитория */
     private fun refresh() {
-        viewModelScope.launch {
-            tasksRepository.getTasks().collect { tasksData ->
-                tasks.value =
-                    tasksData.map {
-                        TaskForView(
-                            it.uuid,
-                            it.text,
-                            selectedSet.contains(it.uuid)
-                        )
-                    }
+        viewModelScope.launch(Dispatchers.IO) {
+            tasks.value = tasksRepository.getTasks().map {
+                TaskForView(
+                    it.uuid,
+                    it.text,
+                    selectedSet.contains(it.uuid)
+                )
             }
         }
     }
 
     /** Добавить задачу в список */
     fun addTask(task: Task) {
-        tasksRepository.addTask(task)
-        refresh()
+        viewModelScope.launch(Dispatchers.IO) {
+            tasksRepository.addTask(task)
+            refresh()
+        }
     }
 
     /** Установить выделение для задачи */
@@ -97,10 +85,12 @@ class TasksViewModel(private val tasksRepository: TasksRepository) : ViewModel()
 
     /** Удалить задачи из списка */
     fun deleteTasks(tasksToDelete: Set<UUID>) {
-        tasksRepository.deleteTasks(tasksToDelete)
-        selectedSet.clear()
-        selectedCount.value = 0
-        refresh()
+        viewModelScope.launch(Dispatchers.IO) {
+            tasksRepository.deleteTasks(tasksToDelete)
+            selectedSet.clear()
+            selectedCount.value = 0
+            refresh()
+        }
     }
 
     /** Удалить выделенные задачи из списка */

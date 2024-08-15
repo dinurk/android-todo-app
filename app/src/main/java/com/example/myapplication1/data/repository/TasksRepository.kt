@@ -2,7 +2,6 @@ package com.example.myapplication1.data.repository
 
 import com.example.myapplication1.data.datasource.TasksLocalDataSource
 import com.example.myapplication1.data.model.Task
-import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -10,7 +9,7 @@ import javax.inject.Singleton
 @Singleton
 class TasksRepository @Inject constructor(private val dataSource: TasksLocalDataSource) {
     /** Получение текущего состояния списка задач */
-    fun getTasks(): Flow<List<Task>> {
+    fun getTasks(): List<Task> {
         return dataSource.getTasks()
     }
 
@@ -19,12 +18,8 @@ class TasksRepository @Inject constructor(private val dataSource: TasksLocalData
         dataSource.addTask(task)
     }
 
+    /** Удалить задачи */
     fun deleteTasks(tasksToDelete: Set<UUID>) {
         dataSource.deleteTasks(tasksToDelete)
     }
-//
-//    /** Удалить задачу */
-//    fun delete(taskUUID: UUID) {
-//        tasks.remove(taskUUID)
-//    }
 }

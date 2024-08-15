@@ -1,26 +1,34 @@
 package com.example.myapplication1.data.datasource
 
+import com.example.myapplication1.data.db.AppDatabase
+import com.example.myapplication1.data.db.entities.TaskEntity
 import com.example.myapplication1.data.model.Task
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import java.util.UUID
 import javax.inject.Inject
 
-class TasksLocalDataSource @Inject constructor() {
-    private var tasks: MutableList<Task> =
-        mutableListOf(Task(UUID.randomUUID(), "task1"), Task(UUID.randomUUID(), "task1"))
+class TasksLocalDataSource @Inject constructor(private val database: AppDatabase) {
 
-    fun getTasks(): Flow<List<Task>> = flow {
-        emit(tasks as List<Task>)
+    fun getTasks(): List<Task> {
+        return database
+            .taskDao()
+            .getAll()
+            .map { Task(UUID.fromString(it.uuid), it.text) }
     }
 
+
     fun addTask(task: Task) {
-        tasks.add(task)
+        database
+            .taskDao()
+            .insertAll(
+                TaskEntity(task.uuid.toString(), task.text)
+            )
     }
 
     fun deleteTasks(tasksToDelete: Set<UUID>) {
-        tasks = tasks.filter {
-            !tasksToDelete.contains(it.uuid)
-        }.toMutableList()
+        database
+            .taskDao()
+            .deleteAll(
+                tasksToDelete.map { it.toString() }
+            )
     }
 }
