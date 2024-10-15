@@ -13,8 +13,6 @@
 Для DI используется Dagger2.
 Данные хранятся в БД (Room).
 
-Планирую добавить TasksRemoteDataSource для работы с сервером через Retrofit
-
 ## Скриншоты
 ### 1. Добавление задач
 <img src="screenshots/screen1.png" width="220"/>
